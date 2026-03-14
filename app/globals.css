@@ -21,6 +21,9 @@
   --color-border: #d1d9d1;
   --color-border-dashed: #c4cfc4;
 
+--font-sans: var(--font-sans, 'DM Sans', system-ui, sans-serif);
+--font-mono: var(--font-mono, 'DM Mono', monospace);
+
   /* Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -83,16 +86,10 @@ html {
 body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--font-sans);
   font-size: var(--font-size-base);
   line-height: 1.6;
-  transition:
-    background-color var(--transition-base),
-    color var(--transition-base);
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
 
 /* ─── Reduced Motion ─────────────────────────────────── */
@@ -103,5 +100,35 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Bar hover effect — add at bottom of globals.css */
+.bar-block {
+  &:hover {
+    filter: brightness(1.1);
+    transform: scaleX(0.96);
+  }
+}
+
+/* ─── Responsive — BarChart container query ─────────── */
+@container barchart (max-width: 500px) {
+  /* On narrow containers, reduce bar label font size */
+  p {
+    font-size: 10px;
+  }
+}
+
+/* ─── Responsive — page padding ─────────────────────── */
+@media (max-width: 768px) {
+  main {
+    padding-inline: var(--spacing-md);
+    padding-block: var(--spacing-xl);
+  }
+}
+
+@media (max-width: 480px) {
+  main {
+    padding-inline: var(--spacing-sm);
   }
 }
