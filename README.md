@@ -1,6 +1,6 @@
 # Atomity Frontend Challenge
 
-**Live Demo:** https://subodhatomity.vercel.app/
+**Live Demo:** https://subodhatomity.vercel.app/ <br/>
 **GitHub:** https://github.com/SGP1896/Atomity-Challenge
 
 ---
