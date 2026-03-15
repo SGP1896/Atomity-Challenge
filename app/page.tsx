@@ -13,6 +13,8 @@ import { DrillLevel } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ResourceIconRow } from '@/components/ResourceIconRow';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { CostPieChart } from '@/components/CostPieChart';
+import { ResourceType } from '@/components/ResourceIcon';
 
 interface DrillState {
   level: DrillLevel;
@@ -32,6 +34,7 @@ const INITIAL_STATE: DrillState = {
 
 export default function Home() {
   const [drill, setDrill] = useState<DrillState>(INITIAL_STATE);
+  const [activeResource, setActiveResource] = useState<ResourceType | null>(null);
 
   // ── Data hooks (caching handled by TanStack Query) ──
   const clustersQuery  = useClusters();
@@ -125,7 +128,10 @@ export default function Home() {
         </h2>
 
            {/* Icon row at top */}
-          <ResourceIconRow />
+         <ResourceIconRow
+  onSelect={setActiveResource}
+  activeType={activeResource}
+/>
 
           <div style={{ marginBlockStart: 'var(--spacing-xl)' }}>
         {/* Back button — shown when drilled in */}
@@ -136,6 +142,15 @@ export default function Home() {
     exit={{ opacity: 0, x: -12 }}
     transition={{ duration: 0.2 }}
   >
+{/* Pie chart — appears below table when icon clicked */}
+{activeResource && items.length > 0 && (
+  <CostPieChart
+    rows={toCostRows(items)}
+    resourceType={activeResource}
+  />
+)}
+<br/>
+
     <button
       onClick={handleBack}
       style={{
@@ -164,6 +179,8 @@ export default function Home() {
           aggregatedBy={aggregatedBy}
         />
 
+        
+
         {/* Error state */}
         {activeQuery.isError && (
           <ErrorBanner
@@ -174,6 +191,7 @@ export default function Home() {
 
         {/* Loading state */}
         {activeQuery.isLoading && <LoadingSkeleton />}
+
 
         {/* Success state */}
        {/* Success state */}
@@ -194,6 +212,8 @@ export default function Home() {
     </motion.div>
   )}
 </AnimatePresence>
+
+
         </div>
       </motion.section>
     </main>

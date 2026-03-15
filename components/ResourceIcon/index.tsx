@@ -8,7 +8,9 @@ export type ResourceType = 'cpu' | 'gpu' | 'ram' | 'storage' | 'network';
 
 interface ResourceIconProps {
   type: ResourceType;
-  index?: number; // for stagger delay
+  index?: number;
+  isActive?: boolean;
+  onClick?: (type: ResourceType) => void;
 }
 
 const LABELS: Record<ResourceType, string> = {
@@ -19,7 +21,6 @@ const LABELS: Record<ResourceType, string> = {
   network: 'Network',
 };
 
-// Inline SVG paths for each resource type
 function IconSVG({ type }: { type: ResourceType }) {
   const style = {
     width: 48,
@@ -37,48 +38,29 @@ function IconSVG({ type }: { type: ResourceType }) {
         <svg viewBox="0 0 48 48" {...style}>
           <rect x="14" y="14" width="20" height="20" rx="2" />
           <rect x="18" y="18" width="12" height="12" rx="1" />
-          {/* pins */}
-          <line x1="19" y1="14" x2="19" y2="9" />
-          <line x1="24" y1="14" x2="24" y2="9" />
-          <line x1="29" y1="14" x2="29" y2="9" />
-          <line x1="19" y1="34" x2="19" y2="39" />
-          <line x1="24" y1="34" x2="24" y2="39" />
-          <line x1="29" y1="34" x2="29" y2="39" />
-          <line x1="14" y1="19" x2="9" y2="19" />
-          <line x1="14" y1="24" x2="9" y2="24" />
-          <line x1="14" y1="29" x2="9" y2="29" />
-          <line x1="34" y1="19" x2="39" y2="19" />
-          <line x1="34" y1="24" x2="39" y2="24" />
-          <line x1="34" y1="29" x2="39" y2="29" />
+          <line x1="19" y1="14" x2="19" y2="9" /><line x1="24" y1="14" x2="24" y2="9" /><line x1="29" y1="14" x2="29" y2="9" />
+          <line x1="19" y1="34" x2="19" y2="39" /><line x1="24" y1="34" x2="24" y2="39" /><line x1="29" y1="34" x2="29" y2="39" />
+          <line x1="14" y1="19" x2="9" y2="19" /><line x1="14" y1="24" x2="9" y2="24" /><line x1="14" y1="29" x2="9" y2="29" />
+          <line x1="34" y1="19" x2="39" y2="19" /><line x1="34" y1="24" x2="39" y2="24" /><line x1="34" y1="29" x2="39" y2="29" />
         </svg>
       );
     case 'gpu':
       return (
         <svg viewBox="0 0 48 48" {...style}>
           <rect x="6" y="14" width="36" height="20" rx="3" />
-          <circle cx="17" cy="24" r="5" />
-          <circle cx="31" cy="24" r="5" />
-          <line x1="10" y1="34" x2="10" y2="39" />
-          <line x1="24" y1="34" x2="24" y2="39" />
-          <line x1="38" y1="34" x2="38" y2="39" />
-          <line x1="6" y1="20" x2="2" y2="20" />
-          <line x1="6" y1="28" x2="2" y2="28" />
+          <circle cx="17" cy="24" r="5" /><circle cx="31" cy="24" r="5" />
+          <line x1="10" y1="34" x2="10" y2="39" /><line x1="24" y1="34" x2="24" y2="39" /><line x1="38" y1="34" x2="38" y2="39" />
+          <line x1="6" y1="20" x2="2" y2="20" /><line x1="6" y1="28" x2="2" y2="28" />
         </svg>
       );
     case 'ram':
       return (
         <svg viewBox="0 0 48 48" {...style}>
           <rect x="6" y="16" width="36" height="16" rx="2" />
-          <line x1="13" y1="16" x2="13" y2="32" />
-          <line x1="19" y1="16" x2="19" y2="32" />
-          <line x1="25" y1="16" x2="25" y2="32" />
-          <line x1="31" y1="16" x2="31" y2="32" />
-          <line x1="35" y1="16" x2="35" y2="32" />
-          <line x1="13" y1="32" x2="13" y2="37" />
-          <line x1="19" y1="32" x2="19" y2="37" />
-          <line x1="25" y1="32" x2="25" y2="37" />
-          <line x1="31" y1="32" x2="31" y2="37" />
-          <line x1="35" y1="32" x2="35" y2="37" />
+          <line x1="13" y1="16" x2="13" y2="32" /><line x1="19" y1="16" x2="19" y2="32" />
+          <line x1="25" y1="16" x2="25" y2="32" /><line x1="31" y1="16" x2="31" y2="32" /><line x1="35" y1="16" x2="35" y2="32" />
+          <line x1="13" y1="32" x2="13" y2="37" /><line x1="19" y1="32" x2="19" y2="37" />
+          <line x1="25" y1="32" x2="25" y2="37" /><line x1="31" y1="32" x2="31" y2="37" /><line x1="35" y1="32" x2="35" y2="37" />
         </svg>
       );
     case 'storage':
@@ -95,35 +77,25 @@ function IconSVG({ type }: { type: ResourceType }) {
       return (
         <svg viewBox="0 0 48 48" {...style}>
           <circle cx="24" cy="24" r="4" />
-          <circle cx="10" cy="14" r="3" />
-          <circle cx="38" cy="14" r="3" />
-          <circle cx="10" cy="36" r="3" />
-          <circle cx="38" cy="36" r="3" />
-          <line x1="24" y1="20" x2="13" y2="16" />
-          <line x1="24" y1="20" x2="35" y2="16" />
-          <line x1="24" y1="28" x2="13" y2="34" />
-          <line x1="24" y1="28" x2="35" y2="34" />
+          <circle cx="10" cy="14" r="3" /><circle cx="38" cy="14" r="3" />
+          <circle cx="10" cy="36" r="3" /><circle cx="38" cy="36" r="3" />
+          <line x1="24" y1="20" x2="13" y2="16" /><line x1="24" y1="20" x2="35" y2="16" />
+          <line x1="24" y1="28" x2="13" y2="34" /><line x1="24" y1="28" x2="35" y2="34" />
         </svg>
       );
   }
 }
 
-export function ResourceIcon({ type, index = 0 }: ResourceIconProps) {
+export function ResourceIcon({ type, index = 0, isActive = false, onClick }: ResourceIconProps) {
   const reducedMotion = useReducedMotion();
 
   const cardVariants: Variants = {
     hidden: { opacity: 0, y: reducedMotion ? 0 : 20 },
     visible: {
-      opacity: 1,
-      y: 0,
-      transition: reducedMotion
-        ? { duration: 0 }
-        : {
-            type: 'spring',
-            stiffness: 100,
-            damping: 18,
-            delay: index * 0.09,
-          },
+      opacity: 1, y: 0,
+      transition: reducedMotion ? { duration: 0 } : {
+        type: 'spring', stiffness: 100, damping: 18, delay: index * 0.09,
+      },
     },
   };
 
@@ -132,18 +104,20 @@ export function ResourceIcon({ type, index = 0 }: ResourceIconProps) {
       variants={cardVariants}
       whileHover={reducedMotion ? {} : { y: -4, scale: 1.04 }}
       whileTap={reducedMotion ? {} : { scale: 0.97 }}
+      onClick={() => onClick?.(type)}
       style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: 'var(--spacing-sm)',
-        cursor: 'default',
+        cursor: 'pointer',
       }}
     >
-      {/* Green rounded square */}
       <div
         style={{
-          backgroundColor: 'var(--color-accent-green)',
+          backgroundColor: isActive
+            ? 'var(--color-accent-green-dark)'
+            : 'var(--color-accent-green)',
           borderRadius: 'var(--radius-xl)',
           padding: 'var(--spacing-md)',
           width: '88px',
@@ -151,20 +125,22 @@ export function ResourceIcon({ type, index = 0 }: ResourceIconProps) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'box-shadow var(--transition-base)',
-          boxShadow: '0 2px 12px color-mix(in srgb, var(--color-accent-green) 30%, transparent)',
+          transition: 'background-color var(--transition-base), box-shadow var(--transition-base)',
+          boxShadow: isActive
+            ? '0 4px 20px color-mix(in srgb, var(--color-accent-green) 50%, transparent)'
+            : '0 2px 12px color-mix(in srgb, var(--color-accent-green) 30%, transparent)',
+          outline: isActive ? '2px solid var(--color-accent-green-dark)' : 'none',
+          outlineOffset: '3px',
         }}
       >
         <IconSVG type={type} />
       </div>
-
-      <span
-        style={{
-          fontWeight: '600',
-          fontSize: 'var(--font-size-sm)',
-          color: 'var(--color-text-primary)',
-        }}
-      >
+      <span style={{
+        fontWeight: isActive ? '700' : '600',
+        fontSize: 'var(--font-size-sm)',
+        color: isActive ? 'var(--color-accent-green-dark)' : 'var(--color-text-primary)',
+        transition: 'color var(--transition-fast)',
+      }}>
         {LABELS[type]}
       </span>
     </motion.div>
