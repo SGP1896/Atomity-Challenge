@@ -1,27 +1,89 @@
-// src/app/page.tsx
+// app/page.tsx
 'use client';
 
+import { useState } from 'react';
 import { DrilldownHeader } from '@/components/DrilldownHeader';
-import { BarChart, BarChartItem } from '@/components/BarChart';
-import { CostTable, CostRow } from '@/components/CostTable';
+import { BarChart } from '@/components/BarChart';
+import { CostTable } from '@/components/CostTable';
+import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { ErrorBanner } from '@/components/ErrorBanner';
+import { useClusters, useNamespaces, usePods } from '@/hooks/useClusterData';
+import { toBarChartItems, toCostRows } from '@/lib/adapters';
+import { DrillLevel } from '@/types';
 
-// ── Dummy data (replaced with API data in Hour 3) ──────────
-const DUMMY_BARS: BarChartItem[] = [
-  { id: 'a', name: 'Cluster A', value: 6867 },
-  { id: 'b', name: 'Cluster B', value: 5574 },
-  { id: 'c', name: 'Cluster C', value: 4664 },
-  { id: 'd', name: 'Cluster D', value: 2545 },
-];
+interface DrillState {
+  level: DrillLevel;
+  clusterId: string | null;
+  clusterName: string | null;
+  namespaceId: string | null;
+  namespaceName: string | null;
+}
 
-const DUMMY_ROWS: CostRow[] = [
-  { id: 'a', name: 'Cluster A', cpu: 2463, ram: 1368, storage: 246, network: 307, gpu: 821, efficiency: 10, total: 6867 },
-  { id: 'b', name: 'Cluster B', cpu: 2127, ram: 1181, storage: 212, network: 265, gpu: 0,   efficiency: 28, total: 5574 },
-  { id: 'c', name: 'Cluster C', cpu: 1733, ram: 962,  storage: 173, network: 216, gpu: 577, efficiency: 15, total: 4664 },
-  { id: 'd', name: 'Cluster D', cpu: 1218, ram: 677,  storage: 121, network: 152, gpu: 0,   efficiency: 50, total: 2545 },
-];
-// ──────────────────────────────────────────────────────────
+const INITIAL_STATE: DrillState = {
+  level: 'cluster',
+  clusterId: null,
+  clusterName: null,
+  namespaceId: null,
+  namespaceName: null,
+};
 
 export default function Home() {
+  const [drill, setDrill] = useState<DrillState>(INITIAL_STATE);
+
+  // ── Data hooks (caching handled by TanStack Query) ──
+  const clustersQuery  = useClusters();
+  const namespacesQuery = useNamespaces(drill.clusterId);
+  const podsQuery      = usePods(drill.namespaceId);
+
+  // ── Pick active query based on current drill level ──
+  const activeQuery =
+    drill.level === 'cluster'   ? clustersQuery :
+    drill.level === 'namespace' ? namespacesQuery :
+    podsQuery;
+
+  const items = activeQuery.data ?? [];
+
+  // ── Breadcrumb label ──
+  const breadcrumb =
+    drill.level === 'cluster'   ? 'Cluster' :
+    drill.level === 'namespace' ? `${drill.clusterName} - Namespace` :
+    `${drill.clusterName} - ${drill.namespaceName} - Pods`;
+
+  const aggregatedBy =
+    drill.level === 'cluster'   ? 'Cluster' :
+    drill.level === 'namespace' ? 'Namespace' :
+    'Pod';
+
+  // ── Drill down handler ──
+  function handleBarClick(id: string, name: string) {
+    if (drill.level === 'cluster') {
+      setDrill({
+        level: 'namespace',
+        clusterId: id,
+        clusterName: name,
+        namespaceId: null,
+        namespaceName: null,
+      });
+    } else if (drill.level === 'namespace') {
+      setDrill((prev) => ({
+        ...prev,
+        level: 'pod',
+        namespaceId: id,
+        namespaceName: name,
+      }));
+    }
+    // pod is the deepest level — no further drill
+  }
+
+  // ── Back navigation ──
+  function handleBack() {
+    if (drill.level === 'pod') {
+      setDrill((prev) => ({ ...prev, level: 'namespace', namespaceId: null, namespaceName: null }));
+    } else if (drill.level === 'namespace') {
+      setDrill(INITIAL_STATE);
+    }
+  }
+
   return (
     <main
       style={{
@@ -45,9 +107,8 @@ export default function Home() {
         <h2
           id="dashboard-title"
           style={{
-            position: 'absolute' as const,
-            width: '1px',
-            height: '1px',
+            position: 'absolute',
+            width: 1, height: 1,
             overflow: 'hidden',
             clip: 'rect(0,0,0,0)',
           }}
@@ -55,14 +116,56 @@ export default function Home() {
           Cloud Cost Dashboard
         </h2>
 
+        {/* Back button — shown when drilled in */}
+        {drill.level !== 'cluster' && (
+          <button
+            onClick={handleBack}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-xs)',
+              background: 'none',
+              border: '1.5px solid var(--color-border)',
+              borderRadius: 'var(--radius-pill)',
+              padding: '6px 16px',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '600',
+              color: 'var(--color-text-secondary)',
+              cursor: 'pointer',
+              marginBlockEnd: 'var(--spacing-md)',
+              transition: 'border-color var(--transition-fast)',
+            }}
+          >
+            ← Back
+          </button>
+        )}
+
         <DrilldownHeader
-          breadcrumb="Cluster"
-          aggregatedBy="Cluster"
+          breadcrumb={breadcrumb}
+          aggregatedBy={aggregatedBy}
         />
 
-        <BarChart items={DUMMY_BARS} />
+        {/* Error state */}
+        {activeQuery.isError && (
+          <ErrorBanner
+            message="Could not load cost data. Check your connection."
+            onRetry={() => activeQuery.refetch()}
+          />
+        )}
 
-        <CostTable rows={DUMMY_ROWS} />
+        {/* Loading state */}
+        {activeQuery.isLoading && <LoadingSkeleton />}
+
+        {/* Success state */}
+        {activeQuery.isSuccess && items.length > 0 && (
+          <>
+            <BarChart
+              items={toBarChartItems(items)}
+              onBarClick={drill.level !== 'pod' ? handleBarClick : undefined}
+            />
+            <CostTable rows={toCostRows(items)} />
+          </>
+        )}
       </section>
     </main>
   );
