@@ -11,6 +11,8 @@ import { useClusters, useNamespaces, usePods } from '@/hooks/useClusterData';
 import { toBarChartItems, toCostRows } from '@/lib/adapters';
 import { DrillLevel } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ResourceIconRow } from '@/components/ResourceIconRow';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface DrillState {
   level: DrillLevel;
@@ -94,17 +96,20 @@ export default function Home() {
         paddingInline: 'var(--spacing-xl)',
       }}
     >
-      <section
-        aria-labelledby="dashboard-title"
-        style={{
-          maxWidth: '960px',
-          marginInline: 'auto',
-          backgroundColor: 'var(--color-bg-card)',
-          borderRadius: 'var(--radius-xl)',
-          padding: 'var(--spacing-xl)',
-          boxShadow: '0 2px 24px color-mix(in srgb, var(--color-text-primary) 6%, transparent)',
-        }}
-      >
+      <motion.section
+  aria-labelledby="dashboard-title"
+  initial={{ opacity: 0, y: 32 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ type: 'spring', stiffness: 70, damping: 18 }}
+  style={{
+    maxWidth: '960px',
+    marginInline: 'auto',
+    backgroundColor: 'var(--color-bg-card)',
+    borderRadius: 'var(--radius-xl)',
+    padding: 'var(--spacing-xl)',
+    boxShadow: '0 2px 24px color-mix(in srgb, var(--color-text-primary) 6%, transparent)',
+  }}
+>
         <h2
           id="dashboard-title"
           style={{
@@ -117,6 +122,10 @@ export default function Home() {
           Cloud Cost Dashboard
         </h2>
 
+           {/* Icon row at top */}
+          <ResourceIconRow />
+
+          <div style={{ marginBlockStart: 'var(--spacing-xl)' }}>
         {/* Back button — shown when drilled in */}
         {drill.level !== 'cluster' && (
   <motion.div
@@ -185,7 +194,8 @@ export default function Home() {
   )}
 </AnimatePresence>
         )}
-      </section>
+        </div>
+      </motion.section>
     </main>
   );
 }

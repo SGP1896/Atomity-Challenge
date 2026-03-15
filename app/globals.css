@@ -144,3 +144,23 @@ body {
     0%, 100% { background-position: 0 0; }
   }
 }
+
+/* ─── Icon row responsive ────────────────────────────── */
+@media (max-width: 600px) {
+  /* Tighten icon row on mobile */
+  .resource-icon-row {
+    gap: var(--spacing-md);
+  }
+}
+
+/* ─── Table horizontal scroll on mobile ─────────────── */
+@media (max-width: 480px) {
+  table {
+    min-width: 480px;
+  }
+}
+
+/* ─── Card shadow stronger in dark mode ─────────────── */
+[data-theme='dark'] section {
+  box-shadow: 0 2px 32px color-mix(in srgb, var(--color-accent-green) 8%, transparent);
+}
