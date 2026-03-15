@@ -88,6 +88,8 @@ export default function Home() {
   }
 
   return (
+    <>
+    <ThemeToggle />
     <main
       style={{
         minHeight: '100vh',
@@ -174,11 +176,10 @@ export default function Home() {
         {activeQuery.isLoading && <LoadingSkeleton />}
 
         {/* Success state */}
-        {activeQuery.isSuccess && items.length > 0 && (
+       {/* Success state */}
 <AnimatePresence mode="wait">
   {activeQuery.isSuccess && items.length > 0 && (
     <motion.div
-      // key changes on drill level change — triggers exit/enter
       key={drill.level + (drill.clusterId ?? '') + (drill.namespaceId ?? '')}
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
@@ -193,9 +194,9 @@ export default function Home() {
     </motion.div>
   )}
 </AnimatePresence>
-        )}
         </div>
       </motion.section>
     </main>
+    </>
   );
 }
