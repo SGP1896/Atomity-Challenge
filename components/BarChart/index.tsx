@@ -1,9 +1,14 @@
-// src/components/BarChart/index.tsx
+// components/BarChart/index.tsx
+'use client';
+
+import { useRef } from 'react';
+import { motion, useInView, Variants } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 export interface BarChartItem {
   id: string;
   name: string;
-  value: number;  // total cost
+  value: number;
 }
 
 interface BarChartProps {
@@ -12,14 +17,44 @@ interface BarChartProps {
 }
 
 export function BarChart({ items, onBarClick }: BarChartProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  // once:true — animation only fires on first scroll into view
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const reducedMotion = useReducedMotion();
+
   const maxValue = Math.max(...items.map((i) => i.value));
 
+  // Container stagger — children animate one after another
+  const containerVariants: Variants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: reducedMotion ? 0 : 0.08,
+      },
+    },
+  };
+
+  // Each bar grows from 0 height to full height
+  const barVariants: Variants = {
+    hidden: { scaleY: 0, opacity: 0 },
+    visible: {
+      scaleY: 1,
+      opacity: 1,
+      transition: reducedMotion
+        ? { duration: 0 }
+        : { type: 'spring', stiffness: 80, damping: 18 },
+    },
+  };
+
   return (
-    // container query wrapper — bars reflow at component level
     <div
       style={{ containerType: 'inline-size', containerName: 'barchart' }}
+      ref={ref}
     >
-      <div
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate={isInView ? 'visible' : 'hidden'}
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${items.length}, 1fr)`,
@@ -29,15 +64,15 @@ export function BarChart({ items, onBarClick }: BarChartProps) {
           paddingInline: 'var(--spacing-md)',
           marginBlockEnd: 'var(--spacing-md)',
           borderBottom: '1px dashed var(--color-border-dashed)',
-          position: 'relative' as const,
+          position: 'relative',
         }}
       >
-        {/* Dashed horizontal guide lines */}
+        {/* Dashed guide lines */}
         {[0.25, 0.5, 0.75].map((ratio) => (
           <div
             key={ratio}
             style={{
-              position: 'absolute' as const,
+              position: 'absolute',
               left: 0,
               right: 0,
               bottom: `${ratio * 100}%`,
@@ -47,19 +82,22 @@ export function BarChart({ items, onBarClick }: BarChartProps) {
           />
         ))}
 
-        {/* Bars */}
+        {/* Animated bars */}
         {items.map((item) => {
           const heightPercent = (item.value / maxValue) * 100;
           return (
-            <div
+            <motion.div
               key={item.id}
+              variants={barVariants}
               style={{
                 display: 'flex',
-                flexDirection: 'column' as const,
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
                 height: '100%',
                 cursor: onBarClick ? 'pointer' : 'default',
+                // transform origin at bottom so bar grows upward
+                transformOrigin: 'bottom',
               }}
               onClick={() => onBarClick?.(item.id, item.name)}
               role={onBarClick ? 'button' : undefined}
@@ -70,22 +108,23 @@ export function BarChart({ items, onBarClick }: BarChartProps) {
                   onBarClick?.(item.id, item.name);
                 }
               }}
+              // Hover effect via whileHover
+              whileHover={reducedMotion ? {} : { scaleX: 0.94, filter: 'brightness(1.12)' }}
+              whileTap={reducedMotion ? {} : { scaleX: 0.9 }}
             >
               <div
                 style={{
                   width: '100%',
                   height: `${heightPercent}%`,
                   backgroundColor: 'var(--color-accent-green)',
-                  borderRadius: 'var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-sm)',
-                  transition: 'filter var(--transition-fast), transform var(--transition-fast)',
-                  // hover handled via CSS below — see globals.css addition
+                  borderRadius:
+                    'var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-sm)',
                 }}
-                className="bar-block"
               />
-            </div>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* Bar labels row */}
       <div
@@ -100,7 +139,7 @@ export function BarChart({ items, onBarClick }: BarChartProps) {
           <p
             key={item.id}
             style={{
-              textAlign: 'center' as const,
+              textAlign: 'center',
               fontWeight: '700',
               fontSize: 'var(--font-size-sm)',
               color: 'var(--color-text-primary)',

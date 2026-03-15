@@ -1,4 +1,9 @@
-// src/components/CostTable/index.tsx
+// components/CostTable/index.tsx
+'use client';
+
+import { useRef } from 'react';
+import { motion, useInView, Variants } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 export interface CostRow {
   id: string;
@@ -8,7 +13,7 @@ export interface CostRow {
   storage: number;
   network: number;
   gpu: number;
-  efficiency: number;  // percentage
+  efficiency: number;
   total: number;
 }
 
@@ -23,11 +28,49 @@ function fmt(value: number, isEfficiency = false): string {
   return `$${value.toLocaleString()}`;
 }
 
+// Add this inside CostTable/index.tsx, before the CostTable function
+
+import { useCountUp } from '@/hooks/useCountUp';
+
+function AnimatedTotal({
+  value,
+  isInView,
+}: {
+  value: number;
+  isInView: boolean;
+}) {
+  const count = useCountUp(value, isInView);
+  return <>${count.toLocaleString()}</>;
+}
+
 export function CostTable({ rows }: CostTableProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-60px' });
+  const reducedMotion = useReducedMotion();
+
+  const tableVariants: Variants = {
+    hidden: {},
+    visible: {
+      transition: { staggerChildren: reducedMotion ? 0 : 0.07 },
+    },
+  };
+
+  const rowVariants: Variants = {
+    hidden: { opacity: 0, y: reducedMotion ? 0 : 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: reducedMotion
+        ? { duration: 0 }
+        : { type: 'spring', stiffness: 100, damping: 20 },
+    },
+  };
+
   return (
     <div
+      ref={ref}
       style={{
-        overflowX: 'auto' as const,
+        overflowX: 'auto',
         paddingInline: 'var(--spacing-md)',
         marginBlockStart: 'var(--spacing-lg)',
       }}
@@ -37,11 +80,10 @@ export function CostTable({ rows }: CostTableProps) {
       <table
         style={{
           width: '100%',
-          borderCollapse: 'collapse' as const,
+          borderCollapse: 'collapse',
           fontSize: 'var(--font-size-sm)',
         }}
       >
-        {/* Column headers */}
         <thead>
           <tr>
             <th style={{ width: '120px' }} />
@@ -49,7 +91,7 @@ export function CostTable({ rows }: CostTableProps) {
               <th
                 key={col}
                 style={{
-                  textAlign: 'center' as const,
+                  textAlign: 'center',
                   fontWeight: '500',
                   color: 'var(--color-text-muted)',
                   paddingBlock: 'var(--spacing-sm)',
@@ -63,18 +105,24 @@ export function CostTable({ rows }: CostTableProps) {
           </tr>
         </thead>
 
-        {/* Data rows */}
-        <tbody>
+        {/* motion.tbody for stagger */}
+        <motion.tbody
+          variants={tableVariants}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+        >
           {rows.map((row, index) => (
-            <tr
+            <motion.tr
               key={row.id}
+              variants={rowVariants}
               style={{
                 borderTop: '1px solid var(--color-border)',
                 backgroundColor:
-                  index % 2 === 0 ? 'transparent' : 'color-mix(in srgb, var(--color-accent-green) 4%, transparent)',
+                  index % 2 === 0
+                    ? 'transparent'
+                    : 'color-mix(in srgb, var(--color-accent-green) 4%, transparent)',
               }}
             >
-              {/* Row label */}
               <td
                 style={{
                   fontWeight: '700',
@@ -86,13 +134,12 @@ export function CostTable({ rows }: CostTableProps) {
                 {row.name}
               </td>
 
-              {/* Cost cells */}
               {[row.cpu, row.ram, row.storage, row.network, row.gpu].map(
                 (val, i) => (
                   <td
                     key={i}
                     style={{
-                      textAlign: 'center' as const,
+                      textAlign: 'center',
                       paddingBlock: 'var(--spacing-sm)',
                       paddingInline: 'var(--spacing-sm)',
                       color: 'var(--color-text-secondary)',
@@ -104,10 +151,9 @@ export function CostTable({ rows }: CostTableProps) {
                 )
               )}
 
-              {/* Efficiency */}
               <td
                 style={{
-                  textAlign: 'center' as const,
+                  textAlign: 'center',
                   paddingBlock: 'var(--spacing-sm)',
                   paddingInline: 'var(--spacing-sm)',
                   color: 'var(--color-text-secondary)',
@@ -117,10 +163,9 @@ export function CostTable({ rows }: CostTableProps) {
                 {fmt(row.efficiency, true)}
               </td>
 
-              {/* Total — bold */}
               <td
                 style={{
-                  textAlign: 'center' as const,
+                  textAlign: 'center',
                   paddingBlock: 'var(--spacing-sm)',
                   paddingInline: 'var(--spacing-sm)',
                   fontWeight: '700',
@@ -128,11 +173,11 @@ export function CostTable({ rows }: CostTableProps) {
                   color: 'var(--color-text-primary)',
                 }}
               >
-                {fmt(row.total)}
+               <AnimatedTotal value={row.total} isInView={isInView} />
               </td>
-            </tr>
+            </motion.tr>
           ))}
-        </tbody>
+        </motion.tbody>
       </table>
     </div>
   );

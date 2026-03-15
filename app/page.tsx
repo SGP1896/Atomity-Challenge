@@ -10,6 +10,7 @@ import { ErrorBanner } from '@/components/ErrorBanner';
 import { useClusters, useNamespaces, usePods } from '@/hooks/useClusterData';
 import { toBarChartItems, toCostRows } from '@/lib/adapters';
 import { DrillLevel } from '@/types';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface DrillState {
   level: DrillLevel;
@@ -118,27 +119,34 @@ export default function Home() {
 
         {/* Back button — shown when drilled in */}
         {drill.level !== 'cluster' && (
-          <button
-            onClick={handleBack}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-xs)',
-              background: 'none',
-              border: '1.5px solid var(--color-border)',
-              borderRadius: 'var(--radius-pill)',
-              padding: '6px 16px',
-              fontSize: 'var(--font-size-sm)',
-              fontWeight: '600',
-              color: 'var(--color-text-secondary)',
-              cursor: 'pointer',
-              marginBlockEnd: 'var(--spacing-md)',
-              transition: 'border-color var(--transition-fast)',
-            }}
-          >
-            ← Back
-          </button>
-        )}
+  <motion.div
+    initial={{ opacity: 0, x: -12 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -12 }}
+    transition={{ duration: 0.2 }}
+  >
+    <button
+      onClick={handleBack}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 'var(--spacing-xs)',
+        background: 'none',
+        border: '1.5px solid var(--color-border)',
+        borderRadius: 'var(--radius-pill)',
+        padding: '6px 16px',
+        fontSize: 'var(--font-size-sm)',
+        fontWeight: '600',
+        color: 'var(--color-text-secondary)',
+        cursor: 'pointer',
+        marginBlockEnd: 'var(--spacing-md)',
+        transition: 'border-color var(--transition-fast)',
+      }}
+    >
+      ← Back
+    </button>
+  </motion.div>
+)}
 
         <DrilldownHeader
           breadcrumb={breadcrumb}
@@ -158,13 +166,24 @@ export default function Home() {
 
         {/* Success state */}
         {activeQuery.isSuccess && items.length > 0 && (
-          <>
-            <BarChart
-              items={toBarChartItems(items)}
-              onBarClick={drill.level !== 'pod' ? handleBarClick : undefined}
-            />
-            <CostTable rows={toCostRows(items)} />
-          </>
+<AnimatePresence mode="wait">
+  {activeQuery.isSuccess && items.length > 0 && (
+    <motion.div
+      // key changes on drill level change — triggers exit/enter
+      key={drill.level + (drill.clusterId ?? '') + (drill.namespaceId ?? '')}
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -16 }}
+      transition={{ type: 'spring', stiffness: 90, damping: 20 }}
+    >
+      <BarChart
+        items={toBarChartItems(items)}
+        onBarClick={drill.level !== 'pod' ? handleBarClick : undefined}
+      />
+      <CostTable rows={toCostRows(items)} />
+    </motion.div>
+  )}
+</AnimatePresence>
         )}
       </section>
     </main>
